@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package keeper;
+
+option go_package = "github.com/RomanIkonnikov93/tages";
+
+import "google/protobuf/empty.proto";
+
+service Keeper {
+  rpc AddRecord(Record) returns (google.protobuf.Empty);
+  rpc GetRecord(Record) returns (Record);
+  rpc GetInfo(google.protobuf.Empty) returns (List);
+}
+
+message Record {
+  string file_name = 1;
+  string created_at = 3;
+  string updated_at = 4;
+  bytes file = 2;
+}
+
+message List {
+  repeated Record note = 1;
+}
+
+
+
+
+
+
+
+
