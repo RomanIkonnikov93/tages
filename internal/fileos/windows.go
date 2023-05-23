@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/RomanIkonnikov93/tages/internal/models"
+	"github.com/RomanIkonnikov93/tages/pkg/pkg/logging"
 )
 
-func FileInfo(files []os.FileInfo) []models.Record {
+func FileInfo(files []os.FileInfo, logger *logging.Logger) []models.Record {
 
 	list := make([]models.Record, 0)
 

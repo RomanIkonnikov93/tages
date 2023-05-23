@@ -3,14 +3,15 @@ package grpcapi
 import (
 	"context"
 	"os"
+	"path/filepath"
 
 	"github.com/RomanIkonnikov93/tages/internal/fileos"
 	"github.com/RomanIkonnikov93/tages/internal/models"
 	pb "github.com/RomanIkonnikov93/tages/internal/proto"
 	"github.com/RomanIkonnikov93/tages/pkg/pkg/logging"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -19,6 +20,7 @@ type KeeperServiceServer struct {
 	DownloadUploadChannel chan models.Record
 	RecordChan            chan models.Record
 	FilesInfoChannel      chan models.Record
+	ShutdownChan          chan bool
 	ListChan              chan []models.Record
 	logger                *logging.Logger
 }
@@ -30,6 +32,7 @@ func InitServices(logger *logging.Logger) *KeeperServiceServer {
 		RecordChan:            make(chan models.Record),
 		FilesInfoChannel:      make(chan models.Record, models.FilesInfoParallelCount),
 		ListChan:              make(chan []models.Record),
+		ShutdownChan:          make(chan bool),
 		logger:                logger,
 	}
 }
@@ -49,14 +52,16 @@ func (k *KeeperServiceServer) Run() {
 
 			case models.Upload:
 
-				err := os.WriteFile("storage/"+r.FileName, r.File, 0666)
+				path := filepath.Clean("storage/" + r.FileName)
+				err := os.WriteFile(path, r.File, 0666)
 				if err != nil {
 					k.logger.Error(err)
 				}
 
 			case models.Download:
 
-				file, err := os.ReadFile("storage/" + r.FileName)
+				path := filepath.Clean("storage/" + r.FileName)
+				file, err := os.ReadFile(path)
 				if err != nil {
 					k.logger.Error(err)
 				}
@@ -65,6 +70,8 @@ func (k *KeeperServiceServer) Run() {
 					FileName: r.FileName,
 					File:     file,
 				}
+			case "":
+				k.ShutdownChan <- true
 			}
 
 		case req := <-k.FilesInfoChannel:
@@ -83,7 +90,7 @@ func (k *KeeperServiceServer) Run() {
 					k.logger.Error(err)
 				}
 
-				k.ListChan <- fileos.FileInfo(files)
+				k.ListChan <- fileos.FileInfo(files, k.logger)
 			}
 
 		}

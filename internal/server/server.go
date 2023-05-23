@@ -34,6 +34,11 @@ func StartServer(service *grpcapi.KeeperServiceServer, cfg *config.Config, logge
 		<-sigint
 		logger.Println("server shutdown gracefully")
 		s.GracefulStop()
+		close(service.DownloadUploadChannel)
+		select {
+		case <-service.ShutdownChan:
+			break
+		}
 		wg.Done()
 	}()
 
