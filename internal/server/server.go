@@ -36,7 +36,7 @@ func StartServer(service *grpcapi.KeeperServiceServer, cfg *config.Config, logge
 		s.GracefulStop()
 		close(service.DownloadUploadChannel)
 		select {
-		case <-service.ShutdownChan:
+		case <-service.ShutdownChannel:
 			break
 		}
 		wg.Done()

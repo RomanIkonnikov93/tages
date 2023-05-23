@@ -18,10 +18,10 @@ import (
 type KeeperServiceServer struct {
 	pb.UnimplementedKeeperServer
 	DownloadUploadChannel chan models.Record
-	RecordChan            chan models.Record
+	RecordChannel         chan models.Record
 	FilesInfoChannel      chan models.Record
-	ShutdownChan          chan bool
-	ListChan              chan []models.Record
+	ListChannel           chan []models.Record
+	ShutdownChannel       chan bool
 	logger                *logging.Logger
 }
 
@@ -29,10 +29,10 @@ func InitServices(logger *logging.Logger) *KeeperServiceServer {
 
 	return &KeeperServiceServer{
 		DownloadUploadChannel: make(chan models.Record, models.UploadDownloadParallelCount),
-		RecordChan:            make(chan models.Record),
+		RecordChannel:         make(chan models.Record),
 		FilesInfoChannel:      make(chan models.Record, models.FilesInfoParallelCount),
-		ListChan:              make(chan []models.Record),
-		ShutdownChan:          make(chan bool),
+		ListChannel:           make(chan []models.Record),
+		ShutdownChannel:       make(chan bool),
 		logger:                logger,
 	}
 }
@@ -66,12 +66,12 @@ func (k *KeeperServiceServer) Run() {
 					k.logger.Error(err)
 				}
 
-				k.RecordChan <- models.Record{
+				k.RecordChannel <- models.Record{
 					FileName: r.FileName,
 					File:     file,
 				}
 			case "":
-				k.ShutdownChan <- true
+				k.ShutdownChannel <- true
 			}
 
 		case req := <-k.FilesInfoChannel:
@@ -90,7 +90,7 @@ func (k *KeeperServiceServer) Run() {
 					k.logger.Error(err)
 				}
 
-				k.ListChan <- fileos.FileInfo(files, k.logger)
+				k.ListChannel <- fileos.FileInfo(files, k.logger)
 			}
 
 		}
@@ -120,7 +120,7 @@ func (k *KeeperServiceServer) GetRecord(ctx context.Context, in *pb.Record) (*pb
 
 	k.DownloadUploadChannel <- record
 
-	res := <-k.RecordChan
+	res := <-k.RecordChannel
 
 	if len(res.File) == 0 {
 		return nil, status.Error(codes.NotFound, "")
@@ -142,7 +142,7 @@ func (k *KeeperServiceServer) GetInfo(ctx context.Context, in *emptypb.Empty) (*
 
 	k.FilesInfoChannel <- record
 
-	res := <-k.ListChan
+	res := <-k.ListChannel
 
 	if len(res) == 0 {
 		return nil, status.Error(codes.NotFound, "")
