@@ -21,7 +21,7 @@ type KeeperServiceServer struct {
 	RecordChannel         chan models.Record
 	FilesInfoChannel      chan models.Record
 	ListChannel           chan []models.Record
-	ShutdownChannel       chan bool
+	ShutdownChannel       chan struct{}
 	logger                *logging.Logger
 }
 
@@ -32,7 +32,7 @@ func InitServices(logger *logging.Logger) *KeeperServiceServer {
 		RecordChannel:         make(chan models.Record),
 		FilesInfoChannel:      make(chan models.Record, models.FilesInfoParallelCount),
 		ListChannel:           make(chan []models.Record),
-		ShutdownChannel:       make(chan bool),
+		ShutdownChannel:       make(chan struct{}),
 		logger:                logger,
 	}
 }
@@ -71,7 +71,7 @@ func (k *KeeperServiceServer) Run() {
 					File:     file,
 				}
 			case "":
-				k.ShutdownChannel <- true
+				k.ShutdownChannel <- struct{}{}
 			}
 
 		case req := <-k.FilesInfoChannel:
