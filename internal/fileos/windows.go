@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/RomanIkonnikov93/tages/internal/models"
-	"github.com/RomanIkonnikov93/tages/pkg/pkg/logging"
 )
 
-func FileInfo(files []os.FileInfo, logger *logging.Logger) []models.Record {
+func FileInfo(files []os.FileInfo) ([]models.Record, error) {
 
 	list := make([]models.Record, 0)
 
@@ -24,5 +23,5 @@ func FileInfo(files []os.FileInfo, logger *logging.Logger) []models.Record {
 			Updated:  v.ModTime().String(),
 		})
 	}
-	return list
+	return list, nil
 }
