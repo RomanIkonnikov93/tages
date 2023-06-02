@@ -8,12 +8,10 @@ import (
 	"time"
 
 	"github.com/RomanIkonnikov93/tages/internal/models"
-	"github.com/RomanIkonnikov93/tages/pkg/pkg/logging"
-
 	"golang.org/x/sys/unix"
 )
 
-func FileInfo(files []os.FileInfo, logger *logging.Logger) []models.Record {
+func FileInfo(files []os.FileInfo) ([]models.Record, error) {
 
 	list := make([]models.Record, 0)
 
@@ -25,7 +23,7 @@ func FileInfo(files []os.FileInfo, logger *logging.Logger) []models.Record {
 
 		err := unix.Statx(unix.AT_FDCWD, path, 0, 0, &statx)
 		if err != nil {
-			logger.Error(err)
+			return nil, err
 		}
 
 		created := ""
@@ -48,5 +46,5 @@ func FileInfo(files []os.FileInfo, logger *logging.Logger) []models.Record {
 
 	}
 
-	return list
+	return list, nil
 }

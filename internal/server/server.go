@@ -10,7 +10,7 @@ import (
 	"github.com/RomanIkonnikov93/tages/internal/config"
 	"github.com/RomanIkonnikov93/tages/internal/grpcapi"
 	pb "github.com/RomanIkonnikov93/tages/internal/proto"
-	"github.com/RomanIkonnikov93/tages/pkg/pkg/logging"
+	"github.com/RomanIkonnikov93/tages/pkg/logging"
 
 	"google.golang.org/grpc"
 )

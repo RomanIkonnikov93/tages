@@ -8,7 +8,7 @@ import (
 	"github.com/RomanIkonnikov93/tages/internal/fileos"
 	"github.com/RomanIkonnikov93/tages/internal/models"
 	pb "github.com/RomanIkonnikov93/tages/internal/proto"
-	"github.com/RomanIkonnikov93/tages/pkg/pkg/logging"
+	"github.com/RomanIkonnikov93/tages/pkg/logging"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,11 +37,13 @@ func InitServices(logger *logging.Logger) *KeeperServiceServer {
 	}
 }
 
-func (k *KeeperServiceServer) Run() {
+func (k *KeeperServiceServer) Run() error {
 
 	if _, err := os.Stat("storage"); os.IsNotExist(err) {
 		err = os.Mkdir("storage", 0666)
-		k.logger.Error(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	for {
@@ -55,7 +57,7 @@ func (k *KeeperServiceServer) Run() {
 				path := filepath.Clean("storage/" + r.FileName)
 				err := os.WriteFile(path, r.File, 0666)
 				if err != nil {
-					k.logger.Error(err)
+					return err
 				}
 
 			case models.Download:
@@ -63,7 +65,7 @@ func (k *KeeperServiceServer) Run() {
 				path := filepath.Clean("storage/" + r.FileName)
 				file, err := os.ReadFile(path)
 				if err != nil {
-					k.logger.Error(err)
+					return err
 				}
 
 				k.RecordChannel <- models.Record{
@@ -82,15 +84,20 @@ func (k *KeeperServiceServer) Run() {
 
 				f, err := os.Open("storage")
 				if err != nil {
-					k.logger.Error(err)
+					return err
 				}
 
 				files, err := f.Readdir(0)
 				if err != nil {
-					k.logger.Error(err)
+					return err
 				}
 
-				k.ListChannel <- fileos.FileInfo(files, k.logger)
+				info, err := fileos.FileInfo(files)
+				if err != nil {
+					return err
+				}
+
+				k.ListChannel <- info
 			}
 
 		}
